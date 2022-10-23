@@ -5,17 +5,28 @@ class Jogo:
         self.nome = nome
         self.categoria = categoria
         self.console = console
+        
+lista = []
 
 app = Flask(__name__)
 
 @app.route('/home')
 def home():
-    jogo_um = Jogo('God of War', 'Ação', 'PS4')
-    jogo_dois = Jogo('Super Mario', 'Aventura', 'SNES')
-    jogo_tres = Jogo('Pokemon', 'RPG', 'GBA')
-    jogo_quatro = Jogo('Mortal Kombat', 'Luta', 'PS2')
-    lista = [jogo_um, jogo_dois, jogo_tres, jogo_quatro]
     return render_template('lista.html', titulo='Jogos', jogos=lista)
+
+@app.route('/novo')
+def novo():
+    return render_template('novo.html', titulo='Novo Jogo')
+
+@app.route('/criar', methods=['POST',])
+def criar():
+    nome = request.form['nome']
+    categoria = request.form['categoria']
+    console = request.form['console']
+    jogo = Jogo(nome, categoria, console)
+    lista.append(jogo)
+    render_template('lista.html', titulo='Jogos', jogos=lista)
+    return redirect('/home')
 
 app.run()
 
