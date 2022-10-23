@@ -10,8 +10,8 @@ lista = []
 
 app = Flask(__name__)
 
-@app.route('/home')
-def home():
+@app.route('/')
+def index():
     return render_template('lista.html', titulo='Jogos', jogos=lista)
 
 @app.route('/novo')
@@ -26,7 +26,7 @@ def criar():
     jogo = Jogo(nome, categoria, console)
     lista.append(jogo)
     render_template('lista.html', titulo='Jogos', jogos=lista)
-    return redirect('/home')
+    return redirect('/')
 
-app.run()
+app.run(debug=True)
 
