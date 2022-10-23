@@ -25,7 +25,6 @@ def criar():
     console = request.form['console']
     jogo = Jogo(nome, categoria, console)
     lista.append(jogo)
-    render_template('lista.html', titulo='Jogos', jogos=lista)
     return redirect('/')
 
 app.run(debug=True)
