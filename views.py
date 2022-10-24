@@ -3,7 +3,7 @@ import time
 from flask import render_template, request, redirect, session, flash, url_for, send_from_directory
 from jogoteca import app, db
 from models import Jogos, Usuarios
-from helpers import FormularioJogo, deleta_arquivo, recupera_imagem
+from helpers import FormularioJogo, deleta_arquivo, recupera_imagem, FormularioUsuario
 
 
 @app.route('/')
@@ -90,7 +90,8 @@ def excluir(id):
 @app.route('/login')
 def login():
     proxima = request.args.get('proxima')
-    return render_template('login.html', proxima=proxima)
+    form = FormularioUsuario()
+    return render_template('login.html', proxima=proxima, form=form)
 
 @app.route('/logoff')
 def logoff():
@@ -100,9 +101,10 @@ def logoff():
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    usuario = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
+    form = FormularioUsuario(request.form)
+    usuario = Usuarios.query.filter_by(nickname=form.nickname.data).first()
     if usuario:
-            if request.form['senha'] == usuario.senha:
+            if form.senha.data == usuario.senha:
                 session['usuario_logado'] = usuario.nickname
                 flash(usuario.nickname + ' logado com sucesso!')
                 proxima_pagina = request.form['proxima']
