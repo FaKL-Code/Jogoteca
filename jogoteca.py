@@ -1,31 +1,33 @@
 from flask import Flask, render_template, request, redirect, session, flash, url_for
-
-class Jogo:
-    def __init__(self, nome, categoria, console):
-        self.nome = nome
-        self.categoria = categoria
-        self.console = console
-        
-lista = []
-
-class Usuario:
-    def __init__(self, nickname, nome, senha):
-        self.nickname = nickname
-        self.nome = nome
-        self.senha = senha
-
-usuario_um = Usuario('admin', 'admin', 'admin')
-usuario_dois = Usuario('user', 'user', 'user')
-usuario_tres = Usuario('suporte', 'suporte', 'suporte')
-
-usuarios = {usuario_um.nickname: usuario_um, usuario_dois.nickname: usuario_dois, usuario_tres.nickname: usuario_tres}
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-
 app.secret_key = 'fakl'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:admin@localhost/jogoteca'
+
+db = SQLAlchemy(app)
+
+class Jogos(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nome = db.Column(db.String(50), nullable=False)
+    categoria = db.Column(db.String(40), nullable=False)
+    console = db.Column(db.String(20), nullable=False)
+    
+    def __repr__(self) -> str:
+        return '<Name %r>' % self.name
+    
+class Usuarios(db.Model):
+    nickname = db.Column(db.String(8), primary_key=True)
+    nome = db.Column(db.String(20), nullable=False)
+    senha = db.Column(db.String(100), nullable=False)
+    
+    def __repr__(self) -> str:
+        return '<Name %r>' % self.name
 
 @app.route('/')
 def index():
+    lista = Jogos.query.order_by(Jogos.id).all()
     return render_template('lista.html', titulo='Jogos', jogos=lista)
 
 @app.route('/novo')
@@ -39,8 +41,14 @@ def criar():
     nome = request.form['nome']
     categoria = request.form['categoria']
     console = request.form['console']
-    jogo = Jogo(nome, categoria, console)
-    lista.append(jogo)
+
+    jogo = Jogos.query.filter_by(nome=nome).first()
+    if jogo:
+        flash('Jogo já cadastrado')
+        return redirect(url_for('index'))
+    novo_jogo = Jogos(nome=nome, categoria=categoria, console=console)
+    db.session.add(novo_jogo)
+    db.session.commit()
     return redirect(url_for('index'))
 
 @app.route('/login')
@@ -56,13 +64,15 @@ def logoff():
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    if request.form['usuario'] in usuarios:
-        usuario = usuarios[request.form['usuario']]
-        if request.form['senha'] == usuario.senha:
-            session['usuario_logado'] = usuario.nickname
-            flash(usuario.nickname + ' logado com sucesso!')
-            proxima_pagina = request.form['proxima']
-            return redirect(proxima_pagina)
+    usuarios = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
+    if usuarios:
+        if request.form['usuario'] in usuarios:
+            usuario = usuarios[request.form['usuario']]
+            if request.form['senha'] == usuario.senha:
+                session['usuario_logado'] = usuario.nickname
+                flash(usuario.nickname + ' logado com sucesso!')
+                proxima_pagina = request.form['proxima']
+                return redirect(proxima_pagina)
     else:
         flash('Não logado, tente novamente!')
         return redirect(url_for('login'))
