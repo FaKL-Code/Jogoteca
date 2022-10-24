@@ -8,6 +8,18 @@ class Jogo:
         
 lista = []
 
+class Usuario:
+    def __init__(self, nickname, nome, senha):
+        self.nickname = nickname
+        self.nome = nome
+        self.senha = senha
+
+usuario_um = Usuario('admin', 'admin', 'admin')
+usuario_dois = Usuario('user', 'user', 'user')
+usuario_tres = Usuario('suporte', 'suporte', 'suporte')
+
+usuarios = {usuario_um.nickname: usuario_um, usuario_dois.nickname: usuario_dois, usuario_tres.nickname: usuario_tres}
+
 app = Flask(__name__)
 
 app.secret_key = 'fakl'
@@ -44,11 +56,13 @@ def logoff():
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    if request.form['usuario'] == 'admin' and request.form['senha'] == 'admin':
-        session['usuario_logado'] = request.form['usuario']
-        flash(request.form['usuario'] + ' logado com sucesso!')
-        proxima_pagina = request.form['proxima']
-        return redirect(proxima_pagina)
+    if request.form['usuario'] in usuarios:
+        usuario = usuarios[request.form['usuario']]
+        if request.form['senha'] == usuario.senha:
+            session['usuario_logado'] = usuario.nickname
+            flash(usuario.nickname + ' logado com sucesso!')
+            proxima_pagina = request.form['proxima']
+            return redirect(proxima_pagina)
     else:
         flash('Não logado, tente novamente!')
         return redirect(url_for('login'))
