@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, session, flash, url_for
+from flask import render_template, request, redirect, session, flash, url_for, send_from_directory
 from jogoteca import app, db
 from models import Jogos, Usuarios
 
@@ -27,6 +27,11 @@ def criar():
     novo_jogo = Jogos(nome=nome, categoria=categoria, console=console)
     db.session.add(novo_jogo)
     db.session.commit()
+    
+    arquivo = request.files['arquivo']
+    upload_path = app.config['UPLOAD_PATH']
+    arquivo.save(f'{upload_path}/capa{novo_jogo.id}.jpg')
+    
     return redirect(url_for('index'))
 
 @app.route('/editar/<int:id>')
@@ -73,10 +78,8 @@ def logoff():
 
 @app.route('/autenticar', methods=['POST',])
 def autenticar():
-    usuarios = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
-    if usuarios:
-        if request.form['usuario'] in usuarios:
-            usuario = usuarios[request.form['usuario']]
+    usuario = Usuarios.query.filter_by(nickname=request.form['usuario']).first()
+    if usuario:
             if request.form['senha'] == usuario.senha:
                 session['usuario_logado'] = usuario.nickname
                 flash(usuario.nickname + ' logado com sucesso!')
@@ -85,3 +88,7 @@ def autenticar():
     else:
         flash('Não logado, tente novamente!')
         return redirect(url_for('login'))
+    
+@app.route('/uploads/<nome_arquivo>')
+def imagem(nome_arquivo):
+    return send_from_directory('uploads', nome_arquivo)
