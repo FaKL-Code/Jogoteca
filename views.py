@@ -108,6 +108,8 @@ def autenticar():
                 session['usuario_logado'] = usuario.nickname
                 flash(usuario.nickname + ' logado com sucesso!')
                 proxima_pagina = request.form['proxima']
+                if proxima_pagina == 'None':
+                    return redirect(url_for('index'))
                 return redirect(proxima_pagina)
     else:
         flash('Não logado, tente novamente!')
