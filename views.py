@@ -29,6 +29,37 @@ def criar():
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/editar/<int:id>')
+def editar(id):
+    if 'usuario_logado' not in session or session['usuario_logado'] == None:
+        return redirect(url_for('login', proxima=url_for('editar')))
+    jogo = Jogos.query.filter_by(id=id).first()
+    return render_template('editar.html', titulo='Editando Jogo', jogo=jogo)
+
+@app.route('/atualizar', methods=['POST',])
+def atualizar():
+    nome = request.form['nome']
+    categoria = request.form['categoria']
+    console = request.form['console']
+    id = request.form['id']
+
+    jogo = Jogos.query.filter_by(id=id).first()
+    jogo.nome = nome
+    jogo.categoria = categoria
+    jogo.console = console
+    db.session.add(jogo)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/excluir/<int:id>')
+def excluir(id):
+    if 'usuario_logado' not in session or session['usuario_logado'] == None:
+        return redirect(url_for('login'))    
+    Jogos.query.filter_by(id=id).delete()
+    db.session.commit()
+    flash('Jogo excluído com sucesso!')    
+    return redirect(url_for('index'))
+
 @app.route('/login')
 def login():
     proxima = request.args.get('proxima')
